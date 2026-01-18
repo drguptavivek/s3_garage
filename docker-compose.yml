@@ -1,0 +1,72 @@
+services:
+  garage:
+    image: dxflrs/garage:v1.0.1
+    container_name: garage
+    # Restart policies:
+    # - unless-stopped: Auto-restart unless explicitly stopped
+    # - always: Always restart if container exits
+    # - on-failure: Restart only on non-zero exit code
+    restart: unless-stopped
+
+    ports:
+      # S3 API - internal only (accessed by rate limiter)
+      - "3901:3900"
+
+    volumes:
+      # Configuration file (mounted directly, environment vars already set)
+      - ./config/garage.toml:/etc/garage.toml:ro
+      # Data directories (bind mounts)
+      - ${GARAGE_META_DIR:-./data/garage-meta}:/var/lib/garage/meta
+      - ${GARAGE_DATA_DIR:-./data/garage-data}:/var/lib/garage/data
+
+    environment:
+      # Logging level
+      - RUST_LOG=${RUST_LOG:-info}
+      # Security tokens
+      - RPC_SECRET=${RPC_SECRET}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - METRICS_TOKEN=${METRICS_TOKEN}
+      # S3 configuration
+      - S3_REGION=${S3_REGION:-garage}
+      - DOMAIN=${DOMAIN:-localhost}
+
+    healthcheck:
+      # Health check command - exits 0 if healthy
+      test: ["CMD", "curl", "-f", "http://localhost:3903/health"]
+      # How often to run the check
+      interval: 30s
+      # How long to wait for response
+      timeout: 10s
+      # Number of failed checks before marking unhealthy
+      retries: 3
+      # Grace period before first check (app startup time)
+      start_period: 30s
+
+  rate-limiter:
+    image: nginx:alpine
+    container_name: garage-rate-limiter
+    restart: unless-stopped
+
+    ports:
+      # S3 API with rate limiting - exposed for reverse proxy access
+      - "3900:3900"
+
+    volumes:
+      # Nginx configuration for rate limiting
+      - ./config/nginx-ratelimit.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      garage:
+        condition: service_started
+
+    healthcheck:
+      # Health check: nc (netcat) checks if port is open
+      test: ["CMD", "nc", "-z", "127.0.0.1", "3900"]
+      # Check every 10 seconds
+      interval: 10s
+      # Wait max 5 seconds for response
+      timeout: 5s
+      # Fail after 3 consecutive failed checks
+      retries: 3
+      # No grace period - rate limiter should start quickly
+      start_period: 5s

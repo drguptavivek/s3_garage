@@ -1,0 +1,24 @@
+# Environment variables
+.env
+
+# Data directories
+data/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

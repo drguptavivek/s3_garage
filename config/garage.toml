@@ -1,0 +1,37 @@
+# Garage S3-Compatible Object Storage Configuration
+
+# Storage directories
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+
+# Database engine (lmdb recommended for production, sqlite for light testing)
+db_engine = "sqlite"
+
+# Replication factor (1 for single-node)
+replication_factor = 1
+
+# RPC configuration
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret = "0000000000000000000000000000000000000000000000000000000000000000"
+
+# Compression level (1-9, higher = more compression)
+compression_level = 1
+
+# S3 API configuration
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+root_domain = ".s3.localhost"
+
+# S3 Web configuration (static website hosting)
+[s3_web]
+bind_addr = "[::]:3902"
+root_domain = ".web.localhost"
+index = "index.html"
+
+# Admin API configuration
+[admin]
+api_bind_addr = "[::]:3903"
+admin_token = "test_admin_token"
+metrics_token = "test_metrics_token"
