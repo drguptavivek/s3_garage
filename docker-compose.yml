@@ -25,3 +25,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  dashboard:
+    build: ./dashboard
+    container_name: garage-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - S3_ENDPOINT=http://s3:3900
+      - ADMIN_ENDPOINT=http://s3:3903
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    depends_on:
+      s3:
+        condition: service_healthy
