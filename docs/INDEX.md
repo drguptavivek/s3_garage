@@ -6,6 +6,7 @@ Complete guide to Garage S3 setup, operation, and monitoring.
 
 ### Getting Started
 - **[Installation](./INSTALLATION.md)** - Setup Garage and rate limiter
+- **[Reverse Proxy Setup](./REVERSE_PROXY.md)** - Configure Nginx/Caddy/Traefik
 - **[Quick Start](./INSTALLATION.md#quick-start)** - Get running in 5 minutes
 
 ### Daily Operations
@@ -35,6 +36,8 @@ docs/
 ├── BUCKET_ACCESS.md            ← Access control for buckets
 ├── MONITORING.md               ← Health checks & monitoring
 ├── PROMETHEUS.md               ← Prometheus integration
+├── REVERSE_PROXY.md            ← External proxy configuration
+├── SIGNED_URLS.md              ← Signed URL guide
 ├── TROUBLESHOOTING.md          ← Problem solving
 ├── SECURITY.md                 ← Security hardening
 ├── METRICS_REFERENCE.md        ← Prometheus metrics catalog

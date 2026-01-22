@@ -1,0 +1,13 @@
+{
+  "name": "garage-s3-examples",
+  "version": "1.0.0",
+  "description": "Examples for interacting with Garage S3",
+  "type": "module",
+  "scripts": {
+    "sign": "node generate-signed-url.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0"
+  }
+}
