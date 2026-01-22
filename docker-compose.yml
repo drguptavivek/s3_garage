@@ -36,6 +36,13 @@ services:
       - S3_ENDPOINT=http://s3:3900
       - ADMIN_ENDPOINT=http://s3:3903
       - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
     depends_on:
       s3:
         condition: service_healthy
+    volumes:
+      - dashboard-venv:/app/.venv
+
+volumes:
+  dashboard-venv:
