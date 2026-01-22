@@ -4,8 +4,8 @@ Production-ready, self-hosted S3-compatible object storage with automatic rate l
 
 ## Key Features
 
-- ✅ Single-node Garage with easy multi-node expansion
-- ✅ Built-in Nginx rate limiter (100 RPS per IP, configurable)
+- ✅ Single-node Garage (S3) + OpenResty (Rate Limiting) in one container
+- ✅ Built-in OpenResty rate limiter (100 RPS per IP, configurable)
 - ✅ Automatic health checks and restart protection
 - ✅ Granular bucket access control (per-service permissions)
 - ✅ Prometheus-compatible metrics endpoint
@@ -56,26 +56,26 @@ Complete guides in `docs/` folder:
 ### Create a Bucket
 
 ```bash
-docker compose exec garage /garage bucket create my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket create my-bucket
 ```
 
 ### Create Access Key
 
 ```bash
-docker compose exec garage /garage key create my-service
+docker compose exec s3 /usr/local/bin/garage key create my-service
 ```
 
 ### Grant Permissions
 
 ```bash
-docker compose exec garage /garage bucket allow \
+docker compose exec s3 /usr/local/bin/garage bucket allow \
   --read --write my-bucket --key my-service
 ```
 
 ### Get Key Credentials
 
 ```bash
-docker compose exec garage /garage key info my-service
+docker compose exec s3 /usr/local/bin/garage key info my-service
 ```
 
 ### Check Status
@@ -92,13 +92,14 @@ See **[docs/OPERATIONS.md](docs/OPERATIONS.md)** for complete command reference.
 ```
 Internet → HTTPS Reverse Proxy (TLS termination)
   ↓
-Rate Limiter (100 RPS per IP, configurable)
-  ↓
-Garage S3 API
-  ↓
-Storage (bind-mounted local directories)
-├── Metadata (SSD recommended)
-└── Object Data (HDD acceptable)
+Container (s3-garage)
+  ├── OpenResty (Rate Limiting)
+  │     ↓ (localhost:3905)
+  └── Garage S3 API
+        ↓
+      Storage (bind-mounted local directories)
+      ├── Metadata (SSD recommended)
+      └── Object Data (HDD acceptable)
 ```
 
 ## Network Security
@@ -164,6 +165,7 @@ Storage (bind-mounted local directories)
 Per-IP request limits prevent overload:
 - **Default**: 100 requests/second per IP
 - **Burst**: 200 requests allowed
+- **Status Code**: 429 Too Many Requests (when limit exceeded)
 - **Configurable**: Edit `RATE_LIMIT_RPS` in `.env`
 
 ### Health Checks
@@ -198,7 +200,7 @@ Flexible storage configuration:
 **Having issues?** Check in order:
 
 1. **Quick diagnostics**: `./tests/test-health.sh`
-2. **View logs**: `docker compose logs garage | tail -50`
+2. **View logs**: `docker compose logs s3 | tail -50`
 3. **Check guide**: [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 4. **Run tests**: `./tests/test-connectivity.sh`
 

@@ -30,19 +30,12 @@ echo ""
 # Test 2: Services running
 echo "TEST 2: Service Status"
 echo "───────────────────────────────────────────────────────────────"
-GARAGE_RUNNING=$(docker compose ps garage | grep -c "Up" || echo "0")
-RATE_LIMITER_RUNNING=$(docker compose ps rate-limiter | grep -c "Up" || echo "0")
+S3_RUNNING=$(docker compose ps s3 | grep -c "Up" || echo "0")
 
-if [ "$GARAGE_RUNNING" -gt 0 ]; then
-    echo "✓ Garage service is running"
+if [ "$S3_RUNNING" -gt 0 ]; then
+    echo "✓ S3 service is running"
 else
-    echo "✗ Garage service is not running"
-fi
-
-if [ "$RATE_LIMITER_RUNNING" -gt 0 ]; then
-    echo "✓ Rate limiter service is running"
-else
-    echo "✗ Rate limiter service is not running"
+    echo "✗ S3 service is not running"
 fi
 echo ""
 
@@ -55,22 +48,25 @@ else
     echo "✗ Port 3900 (Rate limiter) is not accessible"
 fi
 
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:3901/ &> /dev/null; then
-    echo "✓ Port 3901 (Garage) is accessible"
+# Note: Port 3901 is internal now (Garage RPC), but 3903 is exposed (Admin)
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:3903/health &> /dev/null; then
+    echo "✓ Port 3903 (Garage Admin) is accessible"
 else
-    echo "✗ Port 3901 (Garage) is not accessible"
+    echo "✗ Port 3903 (Garage Admin) is not accessible"
 fi
 echo ""
 
-# Test 4: Network connectivity
-echo "TEST 4: Inter-service Communication"
+# Test 4: Internal Loopback Connectivity
+echo "TEST 4: Internal Communication (OpenResty -> Garage)"
 echo "───────────────────────────────────────────────────────────────"
-RATE_LIMITER_TO_GARAGE=$(docker compose exec -T rate-limiter curl -s -o /dev/null -w "%{http_code}" http://garage:3901/ 2>/dev/null || echo "000")
+# We check if OpenResty (port 3900) successfully proxies to Garage (port 3905)
+# A 200 OK from http://localhost:3900/health means the proxy pass worked
+PROXY_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3900/health 2>/dev/null || echo "000")
 
-if [ "$RATE_LIMITER_TO_GARAGE" != "000" ]; then
-    echo "✓ Rate limiter can reach Garage (Status: $RATE_LIMITER_TO_GARAGE)"
+if [ "$PROXY_CHECK" = "200" ]; then
+    echo "✓ OpenResty is successfully proxying to Garage"
 else
-    echo "✗ Rate limiter cannot reach Garage"
+    echo "✗ OpenResty proxy check failed"
 fi
 echo ""
 

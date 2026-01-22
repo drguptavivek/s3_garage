@@ -9,7 +9,7 @@ Solutions for common Garage issues.
 docker compose ps
 
 # Detailed status
-docker compose exec garage /garage status
+docker compose exec s3 /usr/local/bin/garage status
 
 # Health check
 ./tests/test-health.sh
@@ -18,7 +18,7 @@ docker compose exec garage /garage status
 ./tests/test-connectivity.sh
 
 # Recent errors
-docker compose logs garage | grep -i error | tail -20
+docker compose logs s3 | grep -i error | tail -20
 ```
 
 ## Common Issues & Solutions
@@ -29,7 +29,7 @@ docker compose logs garage | grep -i error | tail -20
 
 **Diagnosis:**
 ```bash
-docker compose logs garage | head -50
+docker compose logs s3 | head -50
 ```
 
 **Solutions:**
@@ -75,7 +75,7 @@ docker compose logs garage | head -50
 docker compose exec garage curl -v http://localhost:3903/health
 
 # If fails, check logs
-docker compose logs garage | tail -50
+docker compose logs s3 | tail -50
 ```
 
 ### Services Keep Restarting
@@ -84,7 +84,7 @@ docker compose logs garage | tail -50
 
 **Check restart count:**
 ```bash
-docker inspect garage | jq '.RestartCount'
+docker inspect s3-garage | jq '.RestartCount'
 # If increasing rapidly, it's a restart loop
 ```
 
@@ -94,13 +94,13 @@ docker inspect garage | jq '.RestartCount'
 docker compose pause garage
 
 # 2. Check logs for root cause
-docker compose logs garage | grep -i error
+docker compose logs s3 | grep -i error
 
 # 3. Fix the issue (config, permissions, etc.)
 
 # 4. Resume and test
 docker compose unpause garage
-docker compose ps garage
+docker compose ps s3
 ```
 
 See [RESTART_TROUBLESHOOTING.md](./RESTART_TROUBLESHOOTING.md) for detailed debugging.
@@ -114,8 +114,8 @@ See [RESTART_TROUBLESHOOTING.md](./RESTART_TROUBLESHOOTING.md) for detailed debu
 # Test rate limiter
 curl http://localhost:3900/
 
-# Test from another container
-docker compose exec garage curl http://garage-rate-limiter:3900/
+# Test from another container (if any)
+docker compose exec s3 curl http://localhost:3900/
 
 # Check if port is open
 netstat -tlnp | grep 3900
@@ -123,10 +123,10 @@ netstat -tlnp | grep 3900
 
 **Solutions:**
 
-1. **Rate limiter not running:**
+1. **Service not running:**
    ```bash
-   docker compose ps rate-limiter
-   docker compose restart rate-limiter
+   docker compose ps s3
+   docker compose restart s3
    ```
 
 2. **Firewall blocking:**
@@ -136,7 +136,7 @@ netstat -tlnp | grep 3900
 
 3. **Service not binding to correct port:**
    ```bash
-   docker logs garage-rate-limiter | head -20
+   docker logs s3-garage | head -20
    ```
 
 ### Access Denied Errors
@@ -146,30 +146,30 @@ netstat -tlnp | grep 3900
 **Diagnosis:**
 ```bash
 # Verify key has permission
-docker compose exec garage /garage key info my-service
+docker compose exec s3 /usr/local/bin/garage key info my-service
 
 # Check bucket permissions
-docker compose exec garage /garage bucket info my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket info my-bucket
 ```
 
 **Solutions:**
 
 1. **Key doesn't have read permission:**
    ```bash
-   docker compose exec garage /garage bucket allow --read my-bucket --key my-service
+   docker compose exec s3 /usr/local/bin/garage bucket allow --read my-bucket --key my-service
    ```
 
 2. **Wrong bucket name:**
    ```bash
    # Verify service is accessing correct bucket
-   docker compose exec garage /garage bucket list
+   docker compose exec s3 /usr/local/bin/garage bucket list
    ```
 
 3. **Key doesn't exist:**
    ```bash
-   docker compose exec garage /garage key list
+   docker compose exec s3 /usr/local/bin/garage key list
    # Create if missing
-   docker compose exec garage /garage key create my-service
+   docker compose exec s3 /usr/local/bin/garage key create my-service
    ```
 
 ### Bucket Not Found
@@ -179,13 +179,13 @@ docker compose exec garage /garage bucket info my-bucket
 **Solutions:**
 ```bash
 # List all buckets
-docker compose exec garage /garage bucket list
+docker compose exec s3 /usr/local/bin/garage bucket list
 
 # Create if missing
-docker compose exec garage /garage bucket create my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket create my-bucket
 
 # Verify permissions for key
-docker compose exec garage /garage bucket allow --read --write my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write my-bucket --key my-service
 ```
 
 ### High Memory Usage
@@ -194,10 +194,10 @@ docker compose exec garage /garage bucket allow --read --write my-bucket --key m
 
 **Check usage:**
 ```bash
-docker stats garage
+docker stats s3-garage
 
 # Or one-time:
-docker inspect garage | jq '.State.OOMKilled'
+docker inspect s3-garage | jq '.State.OOMKilled'
 ```
 
 **Solutions:**
@@ -232,7 +232,7 @@ du -sh data/garage-data && sleep 3600 && du -sh data/garage-data
 
 1. **Normal replication/rebalancing**
    - Wait for cluster to stabilize
-   - Monitor with `docker compose exec garage /garage status`
+   - Monitor with `docker compose exec s3 /usr/local/bin/garage status`
 
 2. **Large uploads**
    - Check bucket sizes
@@ -257,7 +257,7 @@ du -sh data/garage-data && sleep 3600 && du -sh data/garage-data
 grep RATE_LIMIT .env
 
 # Check nginx config
-docker exec garage-rate-limiter cat /etc/nginx/nginx.conf | grep limit
+docker exec s3-garage cat /usr/local/openresty/nginx/conf/nginx.conf | grep limit
 ```
 
 **Solutions:**
@@ -265,7 +265,7 @@ docker exec garage-rate-limiter cat /etc/nginx/nginx.conf | grep limit
 1. **Rate limiting disabled:**
    ```bash
    ENABLE_RATE_LIMITER=true
-   docker compose restart rate-limiter
+   docker compose restart s3
    ```
 
 2. **Config not updated:**
@@ -336,9 +336,9 @@ sudo docker compose ps
 ./scripts/init-garage.sh
 
 # Or manually:
-NODE_ID=$(docker compose exec garage /garage status | grep "^ID" | awk '{print $1}')
-docker compose exec garage /garage layout assign -z dc1 -c 100000000000 $NODE_ID
-docker compose exec garage /garage layout apply --version 1
+NODE_ID=$(docker compose exec s3 /usr/local/bin/garage status | grep "^ID" | awk '{print $1}')
+docker compose exec s3 /usr/local/bin/garage layout assign -z dc1 -c 100000000000 $NODE_ID
+docker compose exec s3 /usr/local/bin/garage layout apply --version 1
 ```
 
 ## Debugging Commands
@@ -348,28 +348,28 @@ docker compose exec garage /garage layout apply --version 1
 docker compose ps
 
 # Cluster status
-docker compose exec garage /garage status
+docker compose exec s3 /usr/local/bin/garage status
 
 # Key info
-docker compose exec garage /garage key info MY_KEY
+docker compose exec s3 /usr/local/bin/garage key info MY_KEY
 
 # Bucket info
-docker compose exec garage /garage bucket info MY_BUCKET
+docker compose exec s3 /usr/local/bin/garage bucket info MY_BUCKET
 
 # View logs (last 50 lines)
-docker compose logs garage | tail -50
+docker compose logs s3 | tail -50
 
 # Follow logs (real-time)
-docker compose logs -f garage
+docker compose logs -f s3
 
 # Search logs
-docker compose logs garage | grep "ERROR\|WARN"
+docker compose logs s3 | grep "ERROR\|WARN"
 
 # Restart count
-docker inspect garage | jq '.RestartCount'
+docker inspect s3-garage | jq '.RestartCount'
 
 # Memory usage
-docker stats --no-stream garage
+docker stats --no-stream s3-garage
 
 # Network info
 docker network inspect garage-monitoring
@@ -379,7 +379,7 @@ docker network inspect garage-monitoring
 
 1. **Check this guide** - Most common issues covered
 2. **Run diagnostics** - `./tests/test-health.sh`
-3. **Review logs** - `docker compose logs garage`
+3. **Review logs** - `docker compose logs s3`
 4. **Consult other docs:**
    - [MONITORING.md](./MONITORING.md) - Health/restart issues
    - [OPERATIONS.md](./OPERATIONS.md) - Command reference
@@ -401,7 +401,7 @@ Before asking for help, gather:
 docker compose ps
 
 # Full error output
-docker compose logs garage > garage.log 2>&1
+docker compose logs s3 > garage.log 2>&1
 
 # Configuration (no secrets)
 cat docker-compose.yml
@@ -410,7 +410,7 @@ cat docker-compose.yml
 ./tests/test-health.sh > health-check.log 2>&1
 
 # Restart history
-docker inspect garage | jq '.RestartCount, .State'
+docker inspect s3-garage | jq '.RestartCount, .State'
 ```
 
 Share these logs (without credentials) for diagnosis.

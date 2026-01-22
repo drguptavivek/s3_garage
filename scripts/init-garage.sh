@@ -13,7 +13,7 @@ MAX_RETRIES=30
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if docker compose exec -T garage /garage status >/dev/null 2>&1; then
+    if docker compose exec -T s3 /usr/local/bin/garage status >/dev/null 2>&1; then
         echo "✓ Garage is running"
         break
     fi
@@ -24,7 +24,7 @@ done
 
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     echo "Error: Garage did not start within expected time"
-    echo "Check logs with: docker compose logs garage"
+    echo "Check logs with: docker compose logs s3"
     exit 1
 fi
 
@@ -32,7 +32,7 @@ echo ""
 
 # Get node ID
 echo "Getting node ID..."
-NODE_ID=$(docker compose exec -T garage /garage node id -q 2>/dev/null | tr -d '\r')
+NODE_ID=$(docker compose exec -T s3 /usr/local/bin/garage node id -q 2>/dev/null | cut -d'@' -f1 | tr -d '\r')
 
 if [ -z "$NODE_ID" ]; then
     echo "Error: Could not get node ID"
@@ -101,15 +101,24 @@ echo "Configuring layout with ${CAPACITY_DISPLAY}${CAPACITY_UNIT} capacity..."
 echo ""
 
 # Assign node to zone
-docker compose exec -T garage /garage layout assign -z dc1 -c "$CAPACITY" "$NODE_ID"
+docker compose exec -T s3 /usr/local/bin/garage layout assign -z dc1 -c "$CAPACITY" "$NODE_ID"
 
 echo ""
 echo "Current layout:"
-docker compose exec -T garage /garage layout show
+docker compose exec -T s3 /usr/local/bin/garage layout show
 
 echo ""
-echo "Applying layout (version 1)..."
-docker compose exec -T garage /garage layout apply --version 1
+echo "Applying layout..."
+
+# Detect next version
+NEXT_VERSION=$(docker compose exec -T s3 /usr/local/bin/garage layout show 2>/dev/null | grep "garage layout apply --version" | awk '{print $NF}')
+
+if [ -n "$NEXT_VERSION" ]; then
+    echo "Applying layout version $NEXT_VERSION..."
+    docker compose exec -T s3 /usr/local/bin/garage layout apply --version "$NEXT_VERSION"
+else
+    echo "No pending layout changes detected."
+fi
 
 echo ""
 echo "✓ Garage cluster initialized successfully!"
@@ -117,16 +126,16 @@ echo ""
 echo "Next steps - Create your first bucket and access key:"
 echo ""
 echo "  # Create a bucket"
-echo "  docker compose exec garage /garage bucket create my-bucket"
+echo "  docker compose exec s3 /usr/local/bin/garage bucket create my-bucket"
 echo ""
 echo "  # Create an access key"
-echo "  docker compose exec garage /garage key create my-key"
+echo "  docker compose exec s3 /usr/local/bin/garage key create my-key"
 echo ""
 echo "  # Grant permissions"
-echo "  docker compose exec garage /garage bucket allow --read --write my-bucket --key my-key"
+echo "  docker compose exec s3 /usr/local/bin/garage bucket allow --read --write my-bucket --key my-key"
 echo ""
 echo "  # View the access key credentials"
-echo "  docker compose exec garage /garage key info my-key"
+echo "  docker compose exec s3 /usr/local/bin/garage key info my-key"
 echo ""
 echo "You can now use the S3 API at: https://s3.${DOMAIN:-your-domain.com}"
 echo "And buckets at: https://bucket-name.s3.${DOMAIN:-your-domain.com}"

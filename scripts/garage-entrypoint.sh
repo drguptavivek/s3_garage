@@ -1,38 +1,26 @@
-#!/bin/sh
-# Garage entrypoint script
-# Substitutes environment variables in garage.toml template and starts Garage
-
+#!/bin/bash
 set -e
 
-# Check if required environment variables are set
-if [ -z "$RPC_SECRET" ]; then
-    echo "Error: RPC_SECRET environment variable is not set"
+# Check required variables
+if [ -z "$RPC_SECRET" ] || [ -z "$ADMIN_TOKEN" ] || [ -z "$METRICS_TOKEN" ]; then
+    echo "Error: Required security tokens not set!"
     exit 1
 fi
 
-if [ -z "$ADMIN_TOKEN" ]; then
-    echo "Error: ADMIN_TOKEN environment variable is not set"
-    exit 1
-fi
+echo "Initializing S3 Garage Service..."
 
-if [ -z "$METRICS_TOKEN" ]; then
-    echo "Error: METRICS_TOKEN environment variable is not set"
-    exit 1
-fi
+# 1. Generate Garage Configuration
+echo "Generating Garage config..."
+envsubst < /etc/garage.toml.template > /etc/garage.toml
 
-# Substitute environment variables in template
-echo "Substituting environment variables in configuration..."
-envsubst < /etc/garage.toml.template > /tmp/garage.toml
+# 2. Start Nginx (Rate Limiter)
+echo "Starting Nginx..."
+nginx
 
-# Verify configuration was created
-if [ ! -f /tmp/garage.toml ]; then
-    echo "Error: Failed to create garage.toml"
-    exit 1
-fi
-
+# 3. Start Garage
 echo "Starting Garage..."
 echo "S3 Region: ${S3_REGION}"
 echo "Domain: ${DOMAIN}"
 
-# Start Garage with the generated configuration
-exec /garage -c /tmp/garage.toml "$@"
+# Exec into garage to make it the main process
+exec /usr/local/bin/garage -c /etc/garage.toml server

@@ -7,36 +7,36 @@ Daily operations and command reference for managing Garage S3.
 ### Check Status
 ```bash
 docker compose ps                              # Service status
-docker compose exec garage /garage status      # Cluster status
+docker compose exec s3 /usr/local/bin/garage status      # Cluster status
 ./tests/test-health.sh                         # Health check
 ```
 
 ### Bucket Operations
 ```bash
-docker compose exec garage /garage bucket create NAME
-docker compose exec garage /garage bucket list
-docker compose exec garage /garage bucket info NAME
-docker compose exec garage /garage bucket delete --yes NAME
+docker compose exec s3 /usr/local/bin/garage bucket create NAME
+docker compose exec s3 /usr/local/bin/garage bucket list
+docker compose exec s3 /usr/local/bin/garage bucket info NAME
+docker compose exec s3 /usr/local/bin/garage bucket delete --yes NAME
 ```
 
 ### Key (Access) Operations
 ```bash
-docker compose exec garage /garage key create NAME
-docker compose exec garage /garage key list
-docker compose exec garage /garage key info NAME
-docker compose exec garage /garage key delete --yes NAME
+docker compose exec s3 /usr/local/bin/garage key create NAME
+docker compose exec s3 /usr/local/bin/garage key list
+docker compose exec s3 /usr/local/bin/garage key info NAME
+docker compose exec s3 /usr/local/bin/garage key delete --yes NAME
 ```
 
 ### Permission Operations
 ```bash
 # Grant read+write
-docker compose exec garage /garage bucket allow --read --write BUCKET --key KEY
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write BUCKET --key KEY
 
 # Grant read-only
-docker compose exec garage /garage bucket allow --read BUCKET --key KEY
+docker compose exec s3 /usr/local/bin/garage bucket allow --read BUCKET --key KEY
 
 # Revoke all access
-docker compose exec garage /garage bucket deny BUCKET --key KEY
+docker compose exec s3 /usr/local/bin/garage bucket deny BUCKET --key KEY
 ```
 
 ---
@@ -51,10 +51,10 @@ docker compose exec garage /garage bucket deny BUCKET --key KEY
 docker compose ps
 
 # Detailed Garage status
-docker compose exec garage /garage status
+docker compose exec s3 /usr/local/bin/garage status
 
 # Detailed rate limiter status
-docker compose logs rate-limiter | tail -20
+docker compose logs s3 | grep nginx | tail -20
 
 # Watch service health in real-time
 watch -n 1 'docker compose ps'
@@ -69,13 +69,12 @@ docker compose up -d
 docker compose down
 
 # Restart specific service
-docker compose restart garage
-docker compose restart rate-limiter
+docker compose restart s3
 
 # View logs
-docker compose logs -f garage         # Follow logs
-docker compose logs garage | tail -50 # Last 50 lines
-docker compose logs --since 5m garage # Last 5 minutes
+docker compose logs -f s3         # Follow logs
+docker compose logs s3 | tail -50 # Last 50 lines
+docker compose logs --since 5m s3 # Last 5 minutes
 ```
 
 ---
@@ -85,7 +84,7 @@ docker compose logs --since 5m garage # Last 5 minutes
 #### Create Bucket
 
 ```bash
-docker compose exec garage /garage bucket create my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket create my-bucket
 ```
 
 **Output:**
@@ -96,7 +95,7 @@ Bucket my-bucket was created.
 #### List All Buckets
 
 ```bash
-docker compose exec garage /garage bucket list
+docker compose exec s3 /usr/local/bin/garage bucket list
 ```
 
 **Output:**
@@ -110,7 +109,7 @@ List of buckets:
 #### Get Bucket Info
 
 ```bash
-docker compose exec garage /garage bucket info my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket info my-bucket
 ```
 
 **Output:**
@@ -131,7 +130,7 @@ Authorized keys:
 
 ```bash
 # Bucket must be empty
-docker compose exec garage /garage bucket delete --yes my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket delete --yes my-bucket
 ```
 
 ---
@@ -141,7 +140,7 @@ docker compose exec garage /garage bucket delete --yes my-bucket
 #### Create Access Key
 
 ```bash
-docker compose exec garage /garage key create my-service
+docker compose exec s3 /usr/local/bin/garage key create my-service
 ```
 
 **Output:**
@@ -155,7 +154,7 @@ Can create buckets: false
 #### List All Keys
 
 ```bash
-docker compose exec garage /garage key list
+docker compose exec s3 /usr/local/bin/garage key list
 ```
 
 **Output:**
@@ -169,7 +168,7 @@ List of keys:
 #### Get Key Info (Credentials)
 
 ```bash
-docker compose exec garage /garage key info my-service
+docker compose exec s3 /usr/local/bin/garage key info my-service
 ```
 
 **Output:**
@@ -190,7 +189,7 @@ Authorized buckets:
 #### Delete Key
 
 ```bash
-docker compose exec garage /garage key delete --yes my-service
+docker compose exec s3 /usr/local/bin/garage key delete --yes my-service
 ```
 
 ---
@@ -201,40 +200,40 @@ docker compose exec garage /garage key delete --yes my-service
 
 ```bash
 # Read + Write
-docker compose exec garage /garage bucket allow --read --write my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write my-bucket --key my-service
 
 # Read Only
-docker compose exec garage /garage bucket allow --read my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read my-bucket --key my-service
 
 # No permissions
-docker compose exec garage /garage bucket allow my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket allow my-bucket --key my-service
 ```
 
 #### Check Permissions
 
 ```bash
 # View who has access to a bucket
-docker compose exec garage /garage bucket info my-bucket | grep -A5 "Authorized keys"
+docker compose exec s3 /usr/local/bin/garage bucket info my-bucket | grep -A5 "Authorized keys"
 
 # View what a key can access
-docker compose exec garage /garage key info my-service | grep -A5 "Authorized buckets"
+docker compose exec s3 /usr/local/bin/garage key info my-service | grep -A5 "Authorized buckets"
 ```
 
 #### Revoke Permissions
 
 ```bash
 # Remove key from bucket
-docker compose exec garage /garage bucket deny my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket deny my-bucket --key my-service
 ```
 
 #### Change Permissions
 
 ```bash
 # Revoke existing
-docker compose exec garage /garage bucket deny my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket deny my-bucket --key my-service
 
 # Grant new permissions
-docker compose exec garage /garage bucket allow --read my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read my-bucket --key my-service
 ```
 
 ---
@@ -247,18 +246,18 @@ docker compose exec garage /garage bucket allow --read my-bucket --key my-servic
 
 ```bash
 # 1. Create bucket
-docker compose exec garage /garage bucket create photos
+docker compose exec s3 /usr/local/bin/garage bucket create photos
 
 # 2. Create access key for service
-docker compose exec garage /garage key create photo-uploader
+docker compose exec s3 /usr/local/bin/garage key create photo-uploader
 
 # 3. Grant read+write permissions
-docker compose exec garage /garage bucket allow \
+docker compose exec s3 /usr/local/bin/garage bucket allow \
   --read --write photos \
   --key photo-uploader
 
 # 4. Get credentials for the service
-docker compose exec garage /garage key info photo-uploader
+docker compose exec s3 /usr/local/bin/garage key info photo-uploader
 
 # Output credentials to service:
 # Access Key ID: GKxxxxxx
@@ -271,26 +270,26 @@ docker compose exec garage /garage key info photo-uploader
 
 ```bash
 # Create bucket
-docker compose exec garage /garage bucket create images
+docker compose exec s3 /usr/local/bin/garage bucket create images
 
 # Upload service: read+write
-docker compose exec garage /garage key create upload-service
-docker compose exec garage /garage bucket allow --read --write images --key upload-service
+docker compose exec s3 /usr/local/bin/garage key create upload-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write images --key upload-service
 
 # Processing service: read+write (reads originals, writes processed)
-docker compose exec garage /garage key create image-processor
-docker compose exec garage /garage bucket allow --read --write images --key image-processor
+docker compose exec s3 /usr/local/bin/garage key create image-processor
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write images --key image-processor
 
 # Analytics: read-only
-docker compose exec garage /garage key create analytics
-docker compose exec garage /garage bucket allow --read images --key analytics
+docker compose exec s3 /usr/local/bin/garage key create analytics
+docker compose exec s3 /usr/local/bin/garage bucket allow --read images --key analytics
 
 # Web users: read-only
-docker compose exec garage /garage key create web-client
-docker compose exec garage /garage bucket allow --read images --key web-client
+docker compose exec s3 /usr/local/bin/garage key create web-client
+docker compose exec s3 /usr/local/bin/garage bucket allow --read images --key web-client
 
 # Verify setup
-docker compose exec garage /garage bucket info images
+docker compose exec s3 /usr/local/bin/garage bucket info images
 ```
 
 ### Update Permissions (Upgrade Read-Only to Read+Write)
@@ -300,30 +299,30 @@ docker compose exec garage /garage bucket info images
 # Goal: Add write permission
 
 # Revoke existing (removes all permissions)
-docker compose exec garage /garage bucket deny bucket-name --key key-name
+docker compose exec s3 /usr/local/bin/garage bucket deny bucket-name --key key-name
 
 # Grant new permissions
-docker compose exec garage /garage bucket allow --read --write bucket-name --key key-name
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write bucket-name --key key-name
 
 # Verify
-docker compose exec garage /garage key info key-name
+docker compose exec s3 /usr/local/bin/garage key info key-name
 ```
 
 ### Rotate Access Keys
 
 ```bash
 # Step 1: Create new key
-docker compose exec garage /garage key create old-service-new
+docker compose exec s3 /usr/local/bin/garage key create old-service-new
 
 # Step 2: Grant same permissions as old key
-docker compose exec garage /garage bucket allow --read --write my-bucket --key old-service-new
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write my-bucket --key old-service-new
 
 # Step 3: Update service to use new credentials
 
 # Step 4: Verify new key is working
 
 # Step 5: Delete old key
-docker compose exec garage /garage key delete --yes old-service
+docker compose exec s3 /usr/local/bin/garage key delete --yes old-service
 ```
 
 ---
@@ -340,7 +339,7 @@ docker compose exec garage /garage key delete --yes old-service
 ./scripts/monitor-restarts.sh
 
 # Manual status check
-docker compose ps garage
+docker compose ps s3
 ```
 
 ### View Metrics
@@ -350,7 +349,7 @@ docker compose ps garage
 curl -H "Authorization: Bearer $METRICS_TOKEN" http://localhost:3903/metrics
 
 # Via Garage status command
-docker compose exec garage /garage status
+docker compose exec s3 /usr/local/bin/garage status
 ```
 
 ### Check Disk Usage
@@ -408,8 +407,8 @@ aws s3api list-objects-v2 \
 Error: Key already exists
 
 # Solution: Delete old key first, then create new
-docker compose exec garage /garage key delete --yes my-service
-docker compose exec garage /garage key create my-service
+docker compose exec s3 /usr/local/bin/garage key delete --yes my-service
+docker compose exec s3 /usr/local/bin/garage key create my-service
 ```
 
 ### "Bucket not empty"
@@ -422,7 +421,7 @@ Error: Bucket not empty
 # This requires deleting all objects via S3 API
 # Or using aws-cli:
 aws s3 rm s3://my-bucket --endpoint-url https://s3.example.com --recursive
-docker compose exec garage /garage bucket delete --yes my-bucket
+docker compose exec s3 /usr/local/bin/garage bucket delete --yes my-bucket
 ```
 
 ### "Access Denied" errors
@@ -433,10 +432,10 @@ Error: Access Denied
 
 # Solutions:
 # 1. Check permissions
-docker compose exec garage /garage key info my-service | grep "my-bucket"
+docker compose exec s3 /usr/local/bin/garage key info my-service | grep "my-bucket"
 
 # 2. Check if key needs --read permission
-docker compose exec garage /garage bucket allow --read my-bucket --key my-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read my-bucket --key my-service
 
 # 3. Check credentials are correct in service config
 ```
@@ -477,10 +476,10 @@ docker compose exec garage /garage bucket allow --read my-bucket --key my-servic
 
 ```bash
 # View cluster layout
-docker compose exec garage /garage layout show
+docker compose exec s3 /usr/local/bin/garage layout show
 
 # View current rebalancing progress
-docker compose exec garage /garage status | grep -i "rebalancing\|pending"
+docker compose exec s3 /usr/local/bin/garage status | grep -i "rebalancing\|pending"
 ```
 
 ### Admin API Access
@@ -500,10 +499,10 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 RUST_LOG=debug  # More verbose
 
 # Then restart Garage
-docker compose restart garage
+docker compose restart s3
 
 # View logs
-docker compose logs -f garage
+docker compose logs -f s3
 ```
 
 ---
@@ -513,23 +512,23 @@ docker compose logs -f garage
 ### Create Production Setup
 ```bash
 # 1. Create buckets for different purposes
-docker compose exec garage /garage bucket create user-data
-docker compose exec garage /garage bucket create cache
-docker compose exec garage /garage bucket create backups
+docker compose exec s3 /usr/local/bin/garage bucket create user-data
+docker compose exec s3 /usr/local/bin/garage bucket create cache
+docker compose exec s3 /usr/local/bin/garage bucket create backups
 
 # 2. Create service keys
-docker compose exec garage /garage key create app-service
-docker compose exec garage /garage key create cache-worker
-docker compose exec garage /garage key create backup-system
+docker compose exec s3 /usr/local/bin/garage key create app-service
+docker compose exec s3 /usr/local/bin/garage key create cache-worker
+docker compose exec s3 /usr/local/bin/garage key create backup-system
 
 # 3. Grant specific permissions
-docker compose exec garage /garage bucket allow --read --write user-data --key app-service
-docker compose exec garage /garage bucket allow --read --write cache --key cache-worker
-docker compose exec garage /garage bucket allow --read --write backups --key backup-system
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write user-data --key app-service
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write cache --key cache-worker
+docker compose exec s3 /usr/local/bin/garage bucket allow --read --write backups --key backup-system
 
 # 4. Verify
-docker compose exec garage /garage bucket list
-docker compose exec garage /garage key list
+docker compose exec s3 /usr/local/bin/garage bucket list
+docker compose exec s3 /usr/local/bin/garage key list
 ```
 
 ### Reset Everything (Development Only)
