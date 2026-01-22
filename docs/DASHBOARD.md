@@ -62,6 +62,38 @@ Select a bucket to view its contents.
 *   **Size**: File size in KB.
 *   **Last Modified**: Upload timestamp.
 
+## Security
+
+By default, the dashboard interface is accessible to anyone who can reach port 8501. While S3 data access requires keys, exposing the dashboard publicly is not recommended.
+
+### 1. Bind to Localhost (Recommended)
+If running on a VPS or public server, prevent public access by binding the port only to localhost.
+
+Edit `docker-compose.yml`:
+```yaml
+ports:
+  - "127.0.0.1:8501:8501"
+```
+
+You can then access it securely via SSH tunneling:
+```bash
+ssh -L 8501:localhost:8501 user@your-server.com
+```
+
+### 2. Password Protection
+To expose the dashboard publicly, you **must** use a reverse proxy with authentication (Basic Auth or OAuth).
+
+**Caddy Example (Basic Auth):**
+```caddyfile
+dashboard.example.com {
+    reverse_proxy localhost:8501
+    basicauth {
+        # Username "admin", generate hash with `caddy hash-password`
+        admin $2a$14$....
+    }
+}
+```
+
 ## Troubleshooting
 
 ### "No buckets found"
