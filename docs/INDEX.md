@@ -10,6 +10,7 @@ Complete guide to Garage S3 setup, operation, and monitoring.
 - **[Quick Start](./INSTALLATION.md#quick-start)** - Get running in 5 minutes
 
 ### Daily Operations
+- **[Dashboard Guide](./DASHBOARD.md)** - Visual interface for buckets/objects
 - **[Operations Guide](./OPERATIONS.md)** - Manage buckets, keys, and services
 - **[Bucket Access Control](./BUCKET_ACCESS.md)** - Multiple tiers of access per bucket
 
@@ -32,6 +33,7 @@ Complete guide to Garage S3 setup, operation, and monitoring.
 docs/
 ├── INDEX.md                    ← You are here
 ├── INSTALLATION.md             ← Setup & initialization
+├── DASHBOARD.md                ← Web dashboard guide
 ├── OPERATIONS.md               ← Daily operations & CLI
 ├── BUCKET_ACCESS.md            ← Access control for buckets
 ├── MONITORING.md               ← Health checks & monitoring

@@ -5,6 +5,7 @@ Production-ready, self-hosted S3-compatible object storage with automatic rate l
 ## Key Features
 
 - ✅ Single-node Garage (S3) + OpenResty (Rate Limiting) in one container
+- ✅ **Built-in Web Dashboard** for managing buckets and objects
 - ✅ Built-in OpenResty rate limiter (100 RPS per IP, configurable)
 - ✅ Automatic health checks and restart protection
 - ✅ Granular bucket access control (per-service permissions)
@@ -29,6 +30,9 @@ docker compose up -d
 
 # 5. Verify setup
 ./tests/test-health.sh
+
+# 6. Access Dashboard
+# Open http://localhost:8501 in your browser
 ```
 
 ✅ **Done!** Garage is ready to use.
