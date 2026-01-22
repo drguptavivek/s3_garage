@@ -19,6 +19,7 @@ Complete guide to Garage S3 setup, operation, and monitoring.
 
 ### Reference
 - **[Security](./SECURITY.md)** - Security best practices
+- **[Signed URLs](./SIGNED_URLS.md)** - Secure access with Presigned URLs
 - **[Metrics Reference](./METRICS_REFERENCE.md)** - All available Prometheus metrics
 - **[Architecture](../CLAUDE.md)** - System design and components
 

@@ -24,12 +24,6 @@ s3_region = "${S3_REGION}"
 api_bind_addr = "127.0.0.1:3905"
 root_domain = ".s3.${DOMAIN}"
 
-# S3 Web configuration (static website hosting)
-[s3_web]
-bind_addr = "[::]:3902"
-root_domain = ".web.${DOMAIN}"
-index = "index.html"
-
 # Admin API configuration
 [admin]
 api_bind_addr = "[::]:3903"

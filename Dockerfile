@@ -35,6 +35,6 @@ RUN mkdir -p /var/lib/garage/meta \
     && ln -s /usr/local/openresty/nginx/conf/mime.types /etc/nginx/mime.types
 
 # Expose ports
-EXPOSE 3900 3901 3902 3903
+EXPOSE 3900 3901 3903
 
 ENTRYPOINT ["/entrypoint.sh"]
