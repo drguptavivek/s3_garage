@@ -15,6 +15,9 @@ COPY pyproject.toml uv.lock ./
 # Install dependencies
 RUN uv sync --frozen --no-install-project
 
+# Add venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Copy application code
 COPY . .
 
@@ -22,5 +25,4 @@ COPY . .
 EXPOSE 8501
 
 # Run the application
-# We use `uv run` to execute in the environment created by `uv sync`
-CMD ["uv", "run", "streamlit", "run", "main.py", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "main.py", "--server.address=0.0.0.0"]
